@@ -30,7 +30,7 @@ export class CartService {
 
   async addItem(userId: string, dto: AddToCartDto) {
     const product = await this.prisma.product.findFirst({
-      where: { id: dto.id },
+      where: { id: dto.productId },
     });
 
     if (!product) throw new NotFoundException('Product not found');
@@ -93,14 +93,14 @@ export class CartService {
   async getCartTotal(userId: string) {
     const result = await this.prisma.cartItem.aggregate({
       where: { userId },
-      _sum: {
-        product: { price: true }, // Perlu adjustment sesuai schema
-      },
+      // _sum: {
+      //   product: { price: true }, // Perlu adjustment sesuai schema
+      // },
     });
     // Alternative: hitung manual dengan include product
     const items = await this.getCart(userId);
     return items.reduce(
-      (total, item) => total + item.product.price * item.quantity,
+      (total, item) => total + Number(item.product.price) * item.quantity,
       0,
     );
   }
