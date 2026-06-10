@@ -1,5 +1,4 @@
 import { api } from '../lib/axios';
-import { useAuthStore } from '../stores/authStore';
 import type { CategoryPayload } from '../types/category';
 
 export const getAllCategory = async () => {
@@ -18,29 +17,16 @@ export const getCategoryBySlug = async (slug: string) => {
 };
 
 export const addNewCategory = async (payload: CategoryPayload) => {
-  const res = await api.post(`/category/add`, payload, {
-    headers: {
-      Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
-    },
-  });
-  console.log('service add catg = ', res);
+  const res = await api.post(`/category/add`, payload, {});
   return res.data;
 };
 
 export const updateCategory = async (id: string, payload: CategoryPayload) => {
-  const res = await api.patch(`/category/edit/${id}`, payload, {
-    headers: {
-      Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
-    },
-  });
+  const res = await api.patch(`/category/edit/${id}`, payload);
   return res.data;
 };
 
 export const deleteCategory = async (id: string) => {
-  const res = await api.delete(`/category/delete/${id}`, {
-    headers: {
-      Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
-    },
-  });
+  const res = await api.delete(`/category/delete/${id}`);
   return res.data;
 };

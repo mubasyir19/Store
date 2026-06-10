@@ -15,15 +15,12 @@ export class JwtAuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
-    const authHeader = request.headers.authorization;
+    const token = request.cookies['access_token'] as string;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException({
-        message: 'Authentication token is required',
-      });
+    if (!token) {
+      throw new UnauthorizedException('Token not found');
     }
 
-    const token = authHeader.split(' ')[1];
     try {
       const payload = this.jwtService.verify(token, {
         secret: process.env.JWT_ACCESS_SECRET,
