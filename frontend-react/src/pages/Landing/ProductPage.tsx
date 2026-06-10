@@ -7,7 +7,8 @@ import { Button } from '../../components/ui/button';
 
 function ProductPage() {
   const { data, isLoading } = useProducts();
-  const listProducts = data.data;
+  console.log('data = ', data);
+  const listProducts = data?.data ?? [];
   console.log('list products = ', listProducts);
 
   // Pagination
@@ -15,7 +16,7 @@ function ProductPage() {
   const pageSize = 8;
 
   // Logic Pagination
-  const totalPage = Math.ceil(listProducts.length / pageSize);
+  const totalPage = Math.ceil((listProducts?.length || 0) / pageSize);
   const displayedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -36,6 +37,7 @@ function ProductPage() {
               {displayedData.map((product: Product) => (
                 <ProductCard
                   key={product.id}
+                  id={product.id}
                   images={product.images}
                   name={product.name}
                   slug={product.slug}

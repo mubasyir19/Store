@@ -29,7 +29,7 @@ export class CartController {
     return this.cartService.addItem(req.user.id, dto);
   }
 
-  @Patch(':itemId')
+  @Patch('edit/:itemId')
   async updateQuantity(
     @Req() req: RequestWithUser,
     @Param('itemId') itemId: string,
@@ -38,7 +38,7 @@ export class CartController {
     return this.cartService.updateQuantity(req.user.id, itemId, quantity);
   }
 
-  @Delete(':itemId')
+  @Delete('remove/:itemId')
   async removeItem(
     @Req() req: RequestWithUser,
     @Param('itemId') itemId: string,

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 import { ShoppingCart, ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react';
 import { useProductBySlug } from '../../hooks/product/useProduct';
+import AddToCartButton from '../../components/Product/AddToCartButton';
 
 function DetailProductPage() {
   const { slug } = useParams();
@@ -77,7 +78,7 @@ function DetailProductPage() {
   const formattedPrice = `Rp ${numericPrice.toLocaleString('id-ID')}`;
 
   return (
-    <div className='h-screen'>
+    <div className='min-h-screen'>
       <section className='container mx-auto px-6 py-8'>
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
           {/* Image Gallery Section */}
@@ -199,10 +200,11 @@ function DetailProductPage() {
             </div>
 
             <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4'>
-              <button className='bg-primary flex items-center justify-center gap-3 cursor-pointer text-white font-medium text-sm py-3 px-8 rounded-lg hover:bg-primary/90 transition-all hover:scale-105 transform'>
+              {/* <button className='bg-primary flex items-center justify-center gap-3 cursor-pointer text-white font-medium text-sm py-3 px-8 rounded-lg hover:bg-primary/90 transition-all hover:scale-105 transform'>
                 <ShoppingCart className='size-5 text-white' />
                 Add to Cart
-              </button>
+              </button> */}
+              <AddToCartButton productId={product?.id} stock={product?.stock} />
               <button className='border-2 border-primary bg-transparent cursor-pointer text-primary font-medium text-sm py-3 px-8 rounded-lg hover:bg-primary/10 transition-all'>
                 Buy Now
               </button>

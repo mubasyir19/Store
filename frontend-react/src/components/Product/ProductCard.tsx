@@ -2,6 +2,7 @@ import { Heart, ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router';
 
 interface ProductCardProps {
+  id: string;
   images?: string[];
   name: string;
   slug?: string;

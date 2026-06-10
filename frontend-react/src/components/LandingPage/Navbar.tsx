@@ -34,7 +34,7 @@ function Navbar() {
                 <Heart className={`size-5 ${pathname === '/wishlist' ? 'text-white' : 'text-black'}`} />
               </div>
             </Link>
-            <Link to={`#`}>
+            <Link to={`/cart`}>
               <div className={`group rounded-full p-1 ${pathname === '/wishlist' ? 'bg-primary' : 'bg-none'}`}>
                 <ShoppingCart className={`size-5 ${pathname === '/wishlist' ? 'text-white' : 'text-black'}`} />
               </div>

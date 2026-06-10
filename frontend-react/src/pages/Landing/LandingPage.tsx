@@ -1,14 +1,14 @@
 import { Link } from 'react-router';
-// import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '../../stores/authStore';
 import { MessageCircleQuestionMark, ShieldCheck, Truck } from 'lucide-react';
 import { useProducts } from '../../hooks/product/useProduct';
 import type { Product } from '../../types/product';
 import ProductCard from '../../components/Product/ProductCard';
 
 function LandingPage() {
-  // const { accessToken, user } = useAuthStore();
+  const { accessToken, user } = useAuthStore();
   // console.log('access token =', accessToken);
-  // console.log('user =', user);
+  console.log('user =', user);
   const { data: dataProducts, isLoading, error } = useProducts();
   // console.log('list products =', dataProducts);
 
@@ -116,6 +116,7 @@ function LandingPage() {
             {newArrivals.map((item: Product) => (
               <ProductCard
                 key={item.id}
+                id={item.id}
                 images={item.images}
                 name={item.name}
                 slug={item.slug}
