@@ -8,8 +8,15 @@ export const registerUser = async (payload: RegisterPayload) => {
 
 export const loginUser = async (payload: LoginPayload) => {
   const res = await api.post('/auth/login', payload);
-  // console.log('res login =', res.data);
   return res.data;
 };
 
-export const profileUser = async () => {};
+export const logoutUser = async () => {
+  const res = await api.post('/auth/logout');
+  return res.data;
+};
+
+export const profileUser = async () => {
+  const res = await api.get('/auth/profile');
+  return res.data;
+};
