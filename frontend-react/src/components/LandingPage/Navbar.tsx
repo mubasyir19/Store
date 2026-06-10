@@ -1,11 +1,28 @@
 import { CircleUser, Heart, ShoppingCart } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { useAuthStore } from '../../stores/authStore';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import { Button } from '../ui/button';
+import { useLogout } from '../../hooks/auth/useAuth';
 
 function Navbar() {
   const location = useLocation();
   const pathname = location.pathname;
   const { isAuthenticated } = useAuthStore();
+
+  const { mutate, isPending: pendingLogout } = useLogout();
+
+  const handleLogout = () => {
+    mutate();
+  };
+
   return (
     <nav className='sticky w-full z-50 flex items-center justify-between px-6 py-4 shadow-lg'>
       <div className=''>
@@ -35,15 +52,33 @@ function Navbar() {
               </div>
             </Link>
             <Link to={`/cart`}>
-              <div className={`group rounded-full p-1 ${pathname === '/wishlist' ? 'bg-primary' : 'bg-none'}`}>
-                <ShoppingCart className={`size-5 ${pathname === '/wishlist' ? 'text-white' : 'text-black'}`} />
+              <div className={`group rounded-full p-1 ${pathname === '/cart' ? 'bg-primary' : 'bg-none'}`}>
+                <ShoppingCart className={`size-5 ${pathname === '/cart' ? 'text-white' : 'text-black'}`} />
               </div>
             </Link>
-            <Link to={`#`}>
-              <div className={`group rounded-full p-1 ${pathname === '/wishlist' ? 'bg-primary' : 'bg-none'}`}>
-                <CircleUser className={`size-5 ${pathname === '/wishlist' ? 'text-white' : 'text-black'}`} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className={`group rounded-full p-1 ${pathname === '/user' ? 'bg-primary' : 'bg-none'}`}>
+                  <CircleUser className={`size-5 ${pathname === '/user' ? 'text-white' : 'text-black'}`} />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuItem>
+                    <Link to={`#`}>Profile</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <Button onClick={handleLogout} size={'sm'} className='bg-red-500 w-full text-white rounded-lg'>
+                  {pendingLogout ? 'Loading...' : 'Logout'}
+                </Button>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {/* <Link to={`#`}>
+              <div className={`group rounded-full p-1 ${pathname === '/user' ? 'bg-primary' : 'bg-none'}`}>
+                <CircleUser className={`size-5 ${pathname === '/user' ? 'text-white' : 'text-black'}`} />
               </div>
-            </Link>
+            </Link> */}
           </div>
         ) : (
           <div className='flex items-center gap-4'>
