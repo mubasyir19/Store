@@ -5,6 +5,7 @@ import { lazy, Suspense, type JSX } from 'react';
 import ErrorBoundary from '../components/ErrorBoundary';
 import LoadingFallback from '../components/LoadingFallback';
 import AdminAuthLayout from '../layouts/AdminAuthLayout';
+import ProtectedRoute from '../providers/ProtectedRoute';
 
 // Landing
 const LandingPage = lazy(() => import('../pages/Landing/LandingPage'));
@@ -85,31 +86,63 @@ const router = createBrowserRouter([
   },
   {
     path: '/dashboard',
-    element: <DashboardLayout />,
+    element: <ProtectedRoute allowedRoles={['Admin']} redirectTo='/admin/login' />,
     errorElement: <ErrorBoundary />,
     children: [
       {
-        index: true,
-        element: withSuspense(MainDashPage),
-      },
-      {
-        path: 'product',
-        element: withSuspense(ProductDashPage),
-      },
-      {
-        path: 'product/:productId',
-        // element:
-      },
-      {
-        path: 'product/:productId/edit',
-        // element:
-      },
-      {
-        path: 'order',
-        element: withSuspense(OrderDashPage),
+        element: <DashboardLayout />,
+        children: [
+          {
+            index: true,
+            element: withSuspense(MainDashPage),
+          },
+          {
+            path: 'product',
+            element: withSuspense(ProductDashPage),
+          },
+          {
+            path: 'product/:productId',
+            // element:
+          },
+          {
+            path: 'product/:productId/edit',
+            // element:
+          },
+          {
+            path: 'order',
+            element: withSuspense(OrderDashPage),
+          },
+        ],
       },
     ],
   },
+  // {
+  //   path: '/dashboard',
+  //   element: <DashboardLayout />,
+  //   errorElement: <ErrorBoundary />,
+  //   children: [
+  //     {
+  //       index: true,
+  //       element: withSuspense(MainDashPage),
+  //     },
+  //     {
+  //       path: 'product',
+  //       element: withSuspense(ProductDashPage),
+  //     },
+  //     {
+  //       path: 'product/:productId',
+  //       // element:
+  //     },
+  //     {
+  //       path: 'product/:productId/edit',
+  //       // element:
+  //     },
+  //     {
+  //       path: 'order',
+  //       element: withSuspense(OrderDashPage),
+  //     },
+  //   ],
+  // },
 ]);
 
 export const AppRouter = () => <RouterProvider router={router} />;
