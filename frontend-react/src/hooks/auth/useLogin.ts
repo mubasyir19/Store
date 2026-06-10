@@ -7,8 +7,9 @@ import type { ErrorResponse } from '../../types/error';
 import { useAuthStore } from '../../stores/authStore';
 
 export function useLogin() {
+  const { setAuth } = useAuthStore();
   const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
+
   return useMutation({
     mutationFn: loginUser,
     onSuccess: (response) => {
@@ -19,7 +20,7 @@ export function useLogin() {
       console.log('User:', user);
 
       toast.success('Login successfully');
-      setAuth(accessToken, true, user);
+      setAuth(user, true);
       if (user.role === 'Customer') {
         navigate('/');
       } else if (user.role === 'Admin') {
