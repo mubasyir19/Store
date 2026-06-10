@@ -32,14 +32,14 @@ function setAuthCookies(
     httpOnly: true,
     secure: isProd,
     sameSite: 'strict',
-    path: '/auth/refresh',
+    path: '/auth',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
 
 function clearAuthCookies(res: Response) {
   res.clearCookie('access_token');
-  res.clearCookie('refresh_token', { path: '/auth/refresh' });
+  res.clearCookie('refresh_token', { path: '/auth' });
 }
 
 @Controller('auth')
