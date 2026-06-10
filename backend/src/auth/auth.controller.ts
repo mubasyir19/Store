@@ -1,14 +1,46 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { CreateNewUserDto } from './dto/create-auth.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser, JwtPayload } from './decorators/current-user.decorator';
+
+const isProd = process.env.NODE_ENV === 'production';
+
+function setAuthCookies(
+  res: Response,
+  accessToken: string,
+  refreshToken: string,
+) {
+  res.cookie('access_token', accessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'strict',
+    maxAge: 15 * 60 * 1000,
+  });
+
+  res.cookie('refresh_token', refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'strict',
+    path: '/auth/refresh',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
+
+function clearAuthCookies(res: Response) {
+  res.clearCookie('access_token');
+  res.clearCookie('refresh_token', { path: '/auth/refresh' });
+}
 
 @Controller('auth')
 export class AuthController {
@@ -24,25 +56,18 @@ export class AuthController {
     @Body() loginDto: { email: string; passwordHash: string },
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.login(
+    const { accessToken, refreshToken, user } = await this.authService.login(
       loginDto.email,
       loginDto.passwordHash,
     );
 
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: '/',
-    });
+    setAuthCookies(res, accessToken, refreshToken);
 
     return {
       success: true,
       message: 'Login successful',
       data: {
-        accessToken: result.accessToken,
-        user: result.user,
+        user: user,
       },
     };
   }
@@ -52,30 +77,39 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req.cookies?.refreshToken;
-
-    if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token not provided');
+    const rawToken = req.cookies['refresh_token'] as string;
+    if (!rawToken) {
+      throw new UnauthorizedException('Refresh token tidak ditemukan');
     }
 
     // set auth token
-    const token = await this.authService.refreshToken(refreshToken as string);
+    const { accessToken, refreshToken } =
+      await this.authService.refresh(rawToken);
 
-    res.cookie('refreshToken', token.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: '/',
-    });
+    setAuthCookies(res, accessToken, refreshToken);
 
     return {
       success: true,
-      message: 'Login successful',
-      data: {
-        accessToken: token.accessToken,
-        user: token.user,
-      },
+      message: 'Token has been updated',
     };
+  }
+
+  @Post('logout')
+  // @HttpCode(HttpStatus.OK)
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const rawToken = req.cookies['refresh_token'] as string;
+    if (rawToken) {
+      await this.authService.logout(rawToken).catch(() => {});
+    }
+
+    clearAuthCookies(res);
+    return { message: 'Successfully logout' };
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  async me(@CurrentUser() user: JwtPayload) {
+    const data = await this.authService.getProfile(user.sub);
+    return { user: data };
   }
 }

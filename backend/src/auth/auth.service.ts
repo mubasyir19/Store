@@ -7,7 +7,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import type * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { CreateNewUserDto } from './dto/create-auth.dto';
@@ -19,6 +21,35 @@ export class AuthService {
     private userService: UserService,
     private jwtService: JwtService,
   ) {}
+
+  private generateRefreshToken() {
+    const raw = crypto.randomBytes(64).toString('hex');
+    const hash = crypto.createHash('sha256').update(raw).digest('hex');
+    return { raw, hash };
+  }
+
+  private hashToken(raw: string) {
+    return crypto.createHash('sha256').update(raw).digest('hex');
+  }
+
+  private refreshTokenExpiresAt() {
+    return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  }
+
+  private signAccessToken(payload: {
+    sub: string;
+    email: string;
+    name: string;
+    role: 'Customer' | 'Admin';
+  }) {
+    const expiresIn = (process.env.ACCESS_TOKEN_EXPIRES_IN ??
+      '15m') as jwt.SignOptions['expiresIn'];
+
+    return this.jwtService.sign(payload, {
+      secret: process.env.JWT_ACCESS_SECRET,
+      expiresIn,
+    });
+  }
 
   async register(dto: CreateNewUserDto) {
     try {
@@ -93,27 +124,28 @@ export class AuthService {
       }
 
       // create token
-      const { accessToken, refreshToken } = await this.generateTokens(
-        existingUser.id,
-        existingUser.name,
-        existingUser.email,
-        existingUser.role,
-      );
+      const accessToken = this.signAccessToken({
+        sub: existingUser.id,
+        email: existingUser.email,
+        name: existingUser.name,
+        role: existingUser.role,
+      });
 
-      // update refresh token
-      await this.prisma.user.update({
-        where: {
-          id: existingUser.id,
-        },
+      const { raw, hash } = this.generateRefreshToken();
+
+      // create refresh token
+      await this.prisma.refreshToken.create({
         data: {
-          refreshToken: refreshToken,
+          tokenHash: hash,
+          userId: existingUser.id,
+          expiresAt: this.refreshTokenExpiresAt(),
         },
       });
 
       // return
       return {
         accessToken,
-        refreshToken,
+        refreshToken: raw,
         user: {
           id: existingUser.id,
           name: existingUser.name,
@@ -139,99 +171,59 @@ export class AuthService {
     }
   }
 
-  async generateTokens(
-    userId: string,
-    name: string,
-    email: string,
-    role: 'Customer' | 'Admin',
-  ) {
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(
-        {
-          sub: userId,
-          id: userId,
-          name,
-          email,
-          role,
-          type: 'access',
+  async refresh(rawRefreshToken: string) {
+    const tokenHash = this.hashToken(rawRefreshToken);
+
+    const stored = await this.prisma.refreshToken.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+
+    if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
+      throw new UnauthorizedException("Refresh token isn't valid");
+    }
+
+    const { raw: newRaw, hash: newHash } = this.generateRefreshToken();
+
+    await this.prisma.$transaction([
+      this.prisma.refreshToken.update({
+        where: { id: stored.id },
+        data: { revokedAt: new Date() },
+      }),
+      this.prisma.refreshToken.create({
+        data: {
+          tokenHash: newHash,
+          userId: stored.userId,
+          expiresAt: this.refreshTokenExpiresAt(),
         },
-        { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
-      ),
-      this.jwtService.signAsync(
-        {
-          sub: userId,
-          id: userId,
-          name,
-          email,
-          role,
-          type: 'refresh',
-        },
-        { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '7d' },
-      ),
+      }),
     ]);
-    return { accessToken, refreshToken };
-  }
 
-  async refreshToken(token: string | undefined) {
-    if (!token) {
-      throw new UnauthorizedException('Refresh token not found');
-    }
+    const accessToken = this.signAccessToken({
+      sub: stored.user.id,
+      email: stored.user.email,
+      name: stored.user.name,
+      role: stored.user.role,
+    });
 
-    try {
-      const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_REFRESH_SECRET,
-      }) as unknown as {
-        sub: string;
-        id: string;
-        type?: string;
-      };
-      if (payload.type !== 'refresh') {
-        throw new UnauthorizedException('Invalid token type');
-      }
-
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-      });
-
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
-
-      // Verify stored refresh token hash (token rotation) [citation:3]
-      const isValid = await bcrypt.compare(token, user.refreshToken as string);
-      if (!isValid) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-
-      const { accessToken, refreshToken } = await this.generateTokens(
-        user.id,
-        user.name,
-        user.email,
-        user.role,
-      );
-
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
-        accessToken,
-        refreshToken,
-      };
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
-      }
-
-      throw new UnauthorizedException('Invalid or expired refresh token');
-    }
+    return { accessToken, refreshToken: newRaw };
   }
 
   async updateRefreshToken() {}
 
-  async logout() {}
+  async logout(rawRefreshToken: string) {
+    const tokenHash = this.hashToken(rawRefreshToken);
+
+    await this.prisma.refreshToken.updateMany({
+      where: { tokenHash, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  }
+
+  async getProfile(userId: string) {
+    return this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { id: true, email: true, name: true, createdAt: true },
+    });
+  }
 }
