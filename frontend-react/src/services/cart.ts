@@ -13,27 +13,33 @@ export const getDataCart = async () => {
 
 export const addCart = async (payload: AddToCartPayload) => {
   const res = await api.post('/cart/add', payload, {
-    headers: {
-      Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
-    },
+    // headers: {
+    //   Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+    // },
   });
   return res.data;
 };
 
 export const updateQuantityCart = async (itemId: string, quantity: number) => {
-  const res = await api.post(`/cart/edit/${itemId}`, quantity, {
-    headers: {
-      Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+  console.log('update quantity = ', quantity);
+  const res = await api.patch(
+    `/cart/edit/${itemId}`,
+    { quantity },
+    {
+      // headers: {
+      //   Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+      // },
     },
-  });
+  );
+  console.log('res update quantity serv = ', res.data);
   return res.data;
 };
 
 export const removeCartItem = async (itemId: string) => {
-  const res = await api.post(`/cart/remove/${itemId}`, {
-    headers: {
-      Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
-    },
+  const res = await api.delete(`/cart/remove/${itemId}`, {
+    // headers: {
+    //   Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+    // },
   });
   return res.data;
 };

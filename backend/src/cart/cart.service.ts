@@ -62,6 +62,8 @@ export class CartService {
       return this.removeItem(userId, itemId);
     }
 
+    console.log('quantity input = ', quantity);
+
     // Validasi stock lagi
     const item = await this.prisma.cartItem.findUnique({
       where: { id: itemId },

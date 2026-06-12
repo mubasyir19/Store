@@ -21,12 +21,13 @@ export class CartController {
 
   @Get()
   async getCart(@Req() req: RequestWithUser) {
-    return this.cartService.getCart(req.user.id);
+    return this.cartService.getCart(req.user.sub);
   }
 
   @Post('add')
   async addToCart(@Req() req: RequestWithUser, @Body() dto: AddToCartDto) {
-    return this.cartService.addItem(req.user.id, dto);
+    console.log('user = ', req.user);
+    return this.cartService.addItem(req.user.sub, dto);
   }
 
   @Patch('edit/:itemId')
@@ -35,7 +36,8 @@ export class CartController {
     @Param('itemId') itemId: string,
     @Body('quantity') quantity: number,
   ) {
-    return this.cartService.updateQuantity(req.user.id, itemId, quantity);
+    console.log('controller update quantity = ', quantity);
+    return this.cartService.updateQuantity(req.user.sub, itemId, quantity);
   }
 
   @Delete('remove/:itemId')
@@ -43,16 +45,16 @@ export class CartController {
     @Req() req: RequestWithUser,
     @Param('itemId') itemId: string,
   ) {
-    return this.cartService.removeItem(req.user.id, itemId);
+    return this.cartService.removeItem(req.user.sub, itemId);
   }
 
   @Delete()
   async clearCart(@Req() req: RequestWithUser) {
-    return this.cartService.clearCart(req.user.id);
+    return this.cartService.clearCart(req.user.sub);
   }
 
   @Get('total')
   async getTotal(@Req() req: RequestWithUser) {
-    return { total: await this.cartService.getCartTotal(req.user.id) };
+    return { total: await this.cartService.getCartTotal(req.user.sub) };
   }
 }

@@ -49,6 +49,7 @@ export const useAddToCart = () => {
       queryClient.invalidateQueries({ queryKey: cartKeys.total() });
     },
     onError: (error: any, variables, context) => {
+      console.log('error add cart - ', error);
       console.error('Failed add to cart: ', error.response?.data?.message || error.message);
       // Rollback optimistic update jika perlu
       if (context?.previousCart) {
@@ -77,7 +78,7 @@ export const useUpdateCartQuantity = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: cartKeys.total() });
+      // queryClient.invalidateQueries({ queryKey: cartKeys.total() });
     },
     onError: (error: any, variables, context) => {
       console.error('Failed update quantity: ', error.response?.data?.message || error.message);
