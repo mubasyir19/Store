@@ -78,12 +78,31 @@ model Product {
 }
 
 model Order {
-  id         String      @id @default(uuid())
-  userId     String
-  status     OrderStatus @default(Pending)
-  totalPrice Decimal     @db.Decimal(15, 2)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id              String      @id @default(uuid())
+  userId          String
+  status          OrderStatus @default(Pending)
+  totalPrice      Decimal     @db.Decimal(15, 2)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  shippingName    String?     @map("shipping_name")
+  shippingPhone   String?     @map("shipping_phone")
+  shippingAddress String?     @map("shipping_address")
+  shippingCity    String?     @map("shipping_city")
+  shippingPostalCode String?  @map("shipping_postal_code")
+  shippingNotes   String?     @map("shipping_notes")
+
+  midtransOrderId    String?   @unique @map("midtrans_order_id") // order_id yang dikirim ke Midtrans
+  snapToken          String?   @map("snap_token") // Snap token untuk client
+  snapRedirectUrl    String?   @map("snap_redirect_url") // Redirect URL dari Snap
+  paymentType        String?   @map("payment_type") // credit_card, bank_transfer, gopay, dll
+  paymentStatus      String?   @map("payment_status") // pending, settlement, capture, expire, cancel
+  fraudStatus        String?   @map("fraud_status") // accept, deny, challenge (untuk kartu kredit)
+  vaNumber           String?   @map("va_number") // Nomor VA (jika pakai bank transfer)
+  transactionId      String?   @map("transaction_id") // transaction_id dari Midtrans
+  transactionTime    DateTime? @map("transaction_time") // Waktu transaksi dari Midtrans
+  settlementTime     DateTime? @map("settlement_time") // Waktu settlement (jika sudah)
+  paymentExpiry      DateTime? @map("payment_expiry") // Expiry time pembayaran
+  paymentRawResponse Json?     @map("payment_raw_response") // Raw response dari Midtrans (opsional)
 
   user      User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   orderItem OrderItem[]
@@ -91,12 +110,38 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([userId, status])
+  @@index([midtransOrderId])
+  @@index([paymentStatus])
 }
 
 enum OrderStatus {
+  Pending // Menunggu pembayaran
+  Paid // Sudah dibayar (dari Midtrans webhook)
+  Processing // Sedang diproses/dikemas
+  Shipped // Sudah dikirim
+  Delivered // Sudah diterima customer
+  Cancelled // Dibatalkan
+}
+
+enum PaymentOrderType {
+  Credit_Card
+  Bank_Transfer
+  Gopay
+  Dana
+}
+
+enum PaymentOrderStatus {
   Pending
-  Processing
-  Completed
+  Settlement
+  Capture
+  Expire
+  Cancel
+}
+
+enum FraudOrderStatus {
+  Accept 
+  Deny
+  Challenge
 }
 
 model OrderItem {
