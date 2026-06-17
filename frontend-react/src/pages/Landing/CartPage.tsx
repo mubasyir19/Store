@@ -11,10 +11,6 @@ function CartPage() {
   const { items, getSubtotal } = useCartStore();
   const subtotal = getSubtotal();
 
-  // console.log('list cart items user = ', cartItems);
-  // console.log('items cart = ', items);
-  // console.log('sub total items = ', subtotal);
-
   // Count SubTotal
   const shipping = 0;
   const estimatedTax = subtotal * 0.11;

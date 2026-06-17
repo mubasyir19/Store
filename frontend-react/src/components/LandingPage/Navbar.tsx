@@ -11,13 +11,13 @@ import {
 } from '../ui/dropdown-menu';
 import { Button } from '../ui/button';
 import { useLogout } from '../../hooks/auth/useAuth';
-import { useFetchCart } from '../../hooks/cart/useCart';
+import { useCartStore } from '../../stores/cartStore';
 
 function Navbar() {
   const location = useLocation();
   const pathname = location.pathname;
   const { isAuthenticated } = useAuthStore();
-  const { data: cartItems } = useFetchCart();
+  const items = useCartStore((state) => state.items);
 
   const { mutate, isPending: pendingLogout } = useLogout();
 
@@ -56,8 +56,11 @@ function Navbar() {
             <Link to={`/cart`}>
               <div className={`group relative rounded-full p-1 ${pathname === '/cart' ? 'bg-primary' : 'bg-none'}`}>
                 <ShoppingCart className={`size-5 ${pathname === '/cart' ? 'text-white' : 'text-black'}`} />
-                {cartItems.length > 0 && (
-                  <div className='absolute top-0 right-0 size-2.5 bg-red-500 rounded-full'></div>
+                {items && items.length > 0 && (
+                  <span className='absolute top-1 right-1 flex size-2.5'>
+                    <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75'></span>
+                    <span className='relative inline-flex rounded-full size-2.5 bg-red-500'></span>
+                  </span>
                 )}
               </div>
             </Link>
