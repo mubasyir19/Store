@@ -246,7 +246,7 @@ function EditProductForm({ id }: EditProductFormProps) {
     return (
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
-          <Button size='icon' className='bg-blue-500 hover:bg-blue-600'>
+          <Button size='icon-xs' className='bg-blue-500 hover:bg-blue-600'>
             <Pencil className='h-4 w-4 text-white' />
           </Button>
         </DialogTrigger>
@@ -263,7 +263,7 @@ function EditProductForm({ id }: EditProductFormProps) {
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button size='icon' className='bg-blue-500 hover:bg-blue-600'>
+        <Button size='icon-xs' className='bg-blue-500 hover:bg-blue-600'>
           <Pencil className='h-4 w-4 text-white' />
         </Button>
       </DialogTrigger>
