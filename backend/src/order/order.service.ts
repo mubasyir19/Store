@@ -70,19 +70,19 @@ export class OrderService {
     switch (checkoutData.shippingMethod) {
       case 'regular':
         shippingCost = new Decimal(10000); // Rp 10.000
-        shippingEta = '3-5 hari kerja';
+        shippingEta = '3-5 working days';
         break;
       case 'express':
         shippingCost = new Decimal(20000); // Rp 20.000
-        shippingEta = '1-2 hari kerja';
+        shippingEta = '1-2 working days';
         break;
       case 'same_day':
         shippingCost = new Decimal(50000); // Rp 50.000
-        shippingEta = 'Hari ini (untuk area terdekat)';
+        shippingEta = 'Today (for nearby areas)';
         break;
       default:
         shippingCost = new Decimal(0);
-        shippingEta = 'Tidak tersedia';
+        shippingEta = 'Not available';
     }
 
     // If there's shipping cost from frontend
