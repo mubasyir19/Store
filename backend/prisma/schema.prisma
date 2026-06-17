@@ -78,18 +78,26 @@ model Product {
 }
 
 model Order {
-  id              String      @id @default(uuid())
-  userId          String
-  status          OrderStatus @default(Pending)
-  totalPrice      Decimal     @db.Decimal(15, 2)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  shippingName    String?     @map("shipping_name")
-  shippingPhone   String?     @map("shipping_phone")
-  shippingAddress String?     @map("shipping_address")
-  shippingCity    String?     @map("shipping_city")
-  shippingPostalCode String?  @map("shipping_postal_code")
-  shippingNotes   String?     @map("shipping_notes")
+  id                 String      @id @default(uuid())
+  userId             String
+  status             OrderStatus @default(Pending)
+  totalPrice         Decimal     @db.Decimal(15, 2)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  shippingName       String?     @map("shipping_name")
+  shippingPhone      String?     @map("shipping_phone")
+  shippingAddress    String?     @map("shipping_address")
+  shippingCity       String?     @map("shipping_city")
+  shippingPostalCode String?     @map("shipping_postal_code")
+  shippingNotes      String?     @map("shipping_notes")
+
+  shippingMethod  String  @default("regular") @map("shipping_method") // regular, express, same_day
+  shippingCourier String? @map("shipping_courier") // jne, tiki, pos, dll
+  shippingService String? @map("shipping_service") // reg, yes, oke, dll
+  shippingCost    Decimal @default(0) @map("shipping_cost") @db.Decimal(15, 2)
+  shippingEta     String? @map("shipping_eta") // "3-5 hari", "1-2 hari"
+  trackingNumber  String? @map("tracking_number")
+  trackingUrl     String? @map("tracking_url")
 
   midtransOrderId    String?   @unique @map("midtrans_order_id") // order_id yang dikirim ke Midtrans
   snapToken          String?   @map("snap_token") // Snap token untuk client
@@ -139,7 +147,7 @@ enum PaymentOrderStatus {
 }
 
 enum FraudOrderStatus {
-  Accept 
+  Accept
   Deny
   Challenge
 }

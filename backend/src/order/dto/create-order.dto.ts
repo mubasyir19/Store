@@ -1,4 +1,12 @@
-import { IsString, IsEmail, IsOptional, IsPhoneNumber } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsPhoneNumber,
+  IsIn,
+  IsNumber,
+  Min,
+} from 'class-validator';
 
 export class CreateOrderDto {
   @IsString()
@@ -20,6 +28,23 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   shippingNotes?: string;
+
+  @IsString()
+  @IsIn(['regular', 'express', 'same_day'])
+  shippingMethod: string;
+
+  @IsOptional()
+  @IsString()
+  shippingCourier?: string;
+
+  @IsOptional()
+  @IsString()
+  shippingService?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  shippingCost?: number;
 
   @IsEmail()
   email: string; // Midtrans customer details

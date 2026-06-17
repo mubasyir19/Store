@@ -3,10 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
-import { PrismaService } from 'src/prisma.service';
 import { Decimal } from '@prisma/client/runtime/client';
+import { PrismaService } from 'src/prisma.service';
+import { CreateOrderDto } from './dto/create-order.dto';
 import { MidtransService } from './midtrans.service';
 
 type MidtransNotification = {
@@ -64,6 +63,33 @@ export class OrderService {
       throw new BadRequestException('Cart is empty');
     }
 
+    // Count Shipping Cost
+    let shippingCost = new Decimal(0);
+    let shippingEta = '';
+
+    switch (checkoutData.shippingMethod) {
+      case 'regular':
+        shippingCost = new Decimal(10000); // Rp 10.000
+        shippingEta = '3-5 hari kerja';
+        break;
+      case 'express':
+        shippingCost = new Decimal(20000); // Rp 20.000
+        shippingEta = '1-2 hari kerja';
+        break;
+      case 'same_day':
+        shippingCost = new Decimal(50000); // Rp 50.000
+        shippingEta = 'Hari ini (untuk area terdekat)';
+        break;
+      default:
+        shippingCost = new Decimal(0);
+        shippingEta = 'Tidak tersedia';
+    }
+
+    // If there's shipping cost from frontend
+    if (checkoutData.shippingCost && checkoutData.shippingCost > 0) {
+      shippingCost = new Decimal(checkoutData.shippingCost);
+    }
+
     // loop cartItem fot count total price
     let totalAmount = new Decimal(0);
     const orderItemsData: {
@@ -103,6 +129,9 @@ export class OrderService {
       });
     }
 
+    // Tota + Shipping
+    const totalWithShipping = totalAmount.add(shippingCost);
+
     const midtransOrderId = `ORDER-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     // db transaction
@@ -111,7 +140,8 @@ export class OrderService {
       const newOrder = await tx.order.create({
         data: {
           userId: userId,
-          totalPrice: totalAmount,
+          // totalPrice: totalAmount,
+          totalPrice: totalWithShipping, // if there's a shipping fee from frontend
           status: 'Pending',
           midtransOrderId: midtransOrderId,
           shippingName: checkoutData.shippingName,
@@ -120,6 +150,13 @@ export class OrderService {
           shippingCity: checkoutData.shippingCity,
           shippingPostalCode: checkoutData.shippingPostalCode,
           shippingNotes: checkoutData.shippingNotes || null,
+
+          shippingMethod: checkoutData.shippingMethod,
+          shippingCourier: checkoutData.shippingCourier || null,
+          shippingService: checkoutData.shippingService || null,
+          shippingCost: shippingCost,
+          shippingEta: shippingEta,
+
           paymentExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
           orderItem: { create: orderItemsData },
         },
@@ -144,16 +181,29 @@ export class OrderService {
       return newOrder;
     });
 
+    // Add to Midtrans with Shipping
+    const midtransItemsWithShipping = [
+      ...midtransItems,
+      {
+        id: 'SHIPPING_COST',
+        name: `Ongkos Kirim (${checkoutData.shippingMethod})`,
+        price: Number(shippingCost),
+        quantity: 1,
+      },
+    ];
+
     // payment gateway integration
     const payment = await this.midtransService.createTransaction(
       midtransOrderId,
-      Number(totalAmount),
+      // Number(totalAmount),
+      Number(totalWithShipping), // 🆕 totalWithShipping
       {
         name: checkoutData.shippingName,
         email: user.email,
         phone: checkoutData.shippingPhone,
       },
-      midtransItems,
+      // midtransItems,
+      midtransItemsWithShipping,
     );
 
     await this.prisma.order.update({
@@ -171,6 +221,9 @@ export class OrderService {
         id: result.id,
         totalPrice: result.totalPrice,
         status: result.status,
+        shippingMethod: result.shippingMethod,
+        shippingCost: result.shippingCost,
+        shippingEta: result.shippingEta,
       },
       payment: {
         token: payment.token,
@@ -332,25 +385,5 @@ export class OrderService {
     }
 
     return order;
-  }
-
-  create(createOrderDto: CreateOrderDto) {
-    return 'This action adds a new order';
-  }
-
-  findAll() {
-    return `This action returns all order`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} order`;
-  }
-
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return `This action updates a #${id} order`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} order`;
   }
 }
