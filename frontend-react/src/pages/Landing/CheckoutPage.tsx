@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Label } from '../../components/ui/label';
-import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
-import { useAuthStore } from '../../stores/authStore';
-import { useFetchCart } from '../../hooks/cart/useCart';
-import { useCartStore } from '../../stores/cartStore';
-import { Button } from '../../components/ui/button';
-import type { CartItem } from '../../types/cartItem';
 import ItemCheckout from '../../components/Checkout/ItemCheckout';
+import ShippingDataTab from '../../components/Checkout/Tab/ShippingDataTab';
+import ShippingMethodTab from '../../components/Checkout/Tab/ShippingMethodTab';
+import { useFetchCart } from '../../hooks/cart/useCart';
+import { useAuthStore } from '../../stores/authStore';
+import { useCartStore } from '../../stores/cartStore';
+import type { CartItem } from '../../types/cartItem';
 
 const tabs = [
   {
@@ -37,6 +35,14 @@ function CheckoutPage() {
   const subtotal = getSubtotal();
 
   const [currentStep, setCurrentStep] = useState<number>(0);
+  const nextStep = () => {
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  const prevStep = () => {
+    setCurrentStep((prev) => prev - 1);
+  };
+
   const [formShippingData, setFormShippingData] = useState<ShippingData>({
     shippingName: user?.name ?? '',
     shippingPhone: '',
@@ -108,81 +114,13 @@ function CheckoutPage() {
             </div>
             {/* Tab 1 - basic data shipping */}
             <div className='mt-6'>
-              <h3 className='text-black font-bold text-xl'>Shipping Data</h3>
-              <form className='mt-4 space-y-4'>
-                <div className='space-y-2'>
-                  <Label htmlFor='shippingName'>Name</Label>
-                  <Input
-                    type='text'
-                    name='shippingName'
-                    value={formShippingData.shippingName}
-                    onChange={handleChange}
-                    placeholder='Input your name'
-                    required
-                  />
-                  {/* {errors.slug && <p className='text-sm text-red-500'>{errors.slug}</p>} */}
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='shippingPhone'>Phone</Label>
-                  <Input
-                    type='text'
-                    name='shippingPhone'
-                    value={formShippingData.shippingPhone}
-                    onChange={handleChange}
-                    placeholder='Input phone number'
-                    required
-                  />
-                  {/* {errors.slug && <p className='text-sm text-red-500'>{errors.slug}</p>} */}
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='shippingAddress'>Address</Label>
-                  <Textarea
-                    name='shippingAddress'
-                    value={formShippingData.shippingAddress}
-                    onChange={handleChange}
-                    placeholder='Input your address'
-                    rows={4}
-                    required
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='shippingCity'>City</Label>
-                  <Input
-                    type='text'
-                    name='shippingCity'
-                    value={formShippingData.shippingCity}
-                    onChange={handleChange}
-                    placeholder='Input phone number'
-                    required
-                  />
-                  {/* {errors.slug && <p className='text-sm text-red-500'>{errors.slug}</p>} */}
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='shippingPostalCode'>Postal Code</Label>
-                  <Input
-                    type='text'
-                    name='shippingPostalCode'
-                    value={formShippingData.shippingPostalCode}
-                    onChange={handleChange}
-                    placeholder='Input postal code'
-                    required
-                  />
-                  {/* {errors.slug && <p className='text-sm text-red-500'>{errors.slug}</p>} */}
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='shippingNotes'>Note</Label>
-                  <Textarea
-                    name='shippingNotes'
-                    value={formShippingData.shippingNotes}
-                    onChange={handleChange}
-                    placeholder='Input notes'
-                    rows={4}
-                  />
-                </div>
-              </form>
-              <div className='mt-4 flex justify-end'>
-                <Button className=''>Continue</Button>
-              </div>
+              {currentStep === 0 && (
+                <ShippingDataTab data={formShippingData} onChange={handleChange} onNext={nextStep} />
+              )}
+              {currentStep === 1 && <ShippingMethodTab onNext={nextStep} onPrev={prevStep} />}
+              {currentStep === 2 && (
+                <ShippingDataTab data={formShippingData} onChange={handleChange} onNext={nextStep} onPrev={prevStep} />
+              )}
             </div>
           </div>
           <div className='border border-gray-300 rounded-xl bg-white p-6 h-fit w-full lg:w-1/3'>
