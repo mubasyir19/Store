@@ -4,12 +4,15 @@ import CartItemCard from '../../components/Cart/CartItemCard';
 import { useAuthStore } from '../../stores/authStore';
 import type { CartItem } from '../../types/cartItem';
 import { useCartStore } from '../../stores/cartStore';
+import { useNavigate } from 'react-router';
 
 function CartPage() {
   const { user } = useAuthStore();
   const { data: cartItems, isLoading } = useFetchCart();
   const { items, getSubtotal } = useCartStore();
   const subtotal = getSubtotal();
+
+  const navigate = useNavigate();
 
   // Count SubTotal
   const shipping = 0;
@@ -66,7 +69,9 @@ function CartPage() {
               </p>
             </div>
             <div className='mt-8 space-y-4'>
-              <Button className='w-full'>Proceed to Checkout</Button>
+              <Button onClick={() => navigate('/checkout')} className='w-full'>
+                Proceed to Checkout
+              </Button>
               <div className='bg-slate-100 border border-gray-200 p-2 rounded-md'>
                 <p className='text-xs text-gray-500'>Secured by EmeraldVault Encryption. Your data is protected.</p>
               </div>
