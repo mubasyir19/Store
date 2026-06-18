@@ -6,6 +6,7 @@ import { useFetchCart } from '../../hooks/cart/useCart';
 import { useAuthStore } from '../../stores/authStore';
 import { useCartStore } from '../../stores/cartStore';
 import type { CartItem } from '../../types/cartItem';
+import PaymentMethodTab from '../../components/Checkout/Tab/PaymentMethodTab';
 
 const tabs = [
   {
@@ -55,6 +56,7 @@ function CheckoutPage() {
     shippingMethod: 'regular',
     shippingPrice: 10000,
   });
+  const [paymentMethod, setPaymentMethod] = useState<string>('bank_transfer');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -67,6 +69,10 @@ function CheckoutPage() {
       shippingMethod: method,
       shippingPrice: price,
     }));
+  };
+
+  const handlePaymentMethodChange = (method: string) => {
+    setPaymentMethod(method);
   };
 
   // Count Total Cart
@@ -136,6 +142,14 @@ function CheckoutPage() {
                   selectedMethod={formShippingData.shippingMethod}
                   selectedPrice={formShippingData.shippingPrice}
                   onMethodChange={handleShippingMethodChange}
+                />
+              )}
+              {currentStep === 2 && (
+                <PaymentMethodTab
+                  onNext={nextStep}
+                  onPrev={prevStep}
+                  selectedMethod={paymentMethod}
+                  onMethodChange={handlePaymentMethodChange}
                 />
               )}
             </div>
