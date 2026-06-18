@@ -7,6 +7,9 @@ import { useAuthStore } from '../../stores/authStore';
 import { useCartStore } from '../../stores/cartStore';
 import type { CartItem } from '../../types/cartItem';
 import PaymentMethodTab from '../../components/Checkout/Tab/PaymentMethodTab';
+import { useCheckout } from '../../hooks/order/useOrder';
+import { toast } from 'sonner';
+import type { CheckoutData } from '../../types/order';
 
 const tabs = [
   {
@@ -36,6 +39,7 @@ function CheckoutPage() {
   const { data: cartItems, isLoading } = useFetchCart();
   const { getSubtotal } = useCartStore();
   const subtotal = getSubtotal();
+  const { mutate: checkout, isPending: loadingCheckout } = useCheckout();
 
   const [currentStep, setCurrentStep] = useState<number>(0);
   const nextStep = () => {
@@ -73,6 +77,35 @@ function CheckoutPage() {
 
   const handlePaymentMethodChange = (method: string) => {
     setPaymentMethod(method);
+  };
+
+  const handlePlaceOrder = () => {
+    if (!formShippingData.shippingName) {
+      toast.error('Nama penerima wajib diisi');
+      return;
+    }
+    if (!formShippingData.shippingPhone) {
+      toast.error('Nomor telepon wajib diisi');
+      return;
+    }
+    if (!formShippingData.shippingAddress) {
+      toast.error('Alamat wajib diisi');
+      return;
+    }
+
+    const payload: CheckoutData = {
+      shippingName: formShippingData.shippingName,
+      shippingPhone: formShippingData.shippingPhone,
+      shippingAddress: formShippingData.shippingAddress,
+      shippingCity: formShippingData.shippingCity,
+      shippingPostalCode: formShippingData.shippingPostalCode,
+      shippingNotes: formShippingData.shippingNotes,
+      shippingMethod: formShippingData.shippingMethod,
+      paymentMethod: paymentMethod,
+      email: user?.email || '',
+    };
+
+    checkout(payload);
   };
 
   // Count Total Cart
@@ -146,10 +179,11 @@ function CheckoutPage() {
               )}
               {currentStep === 2 && (
                 <PaymentMethodTab
-                  onNext={nextStep}
+                  onNext={handlePlaceOrder}
                   onPrev={prevStep}
                   selectedMethod={paymentMethod}
                   onMethodChange={handlePaymentMethodChange}
+                  isPending={loadingCheckout}
                 />
               )}
             </div>

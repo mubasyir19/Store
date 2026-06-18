@@ -6,9 +6,10 @@ interface PaymentMethodTabProps {
   onPrev: () => void;
   selectedMethod: string;
   onMethodChange: (method: string) => void;
+  isPending?: boolean;
 }
 
-function PaymentMethodTab({ onNext, onPrev, selectedMethod, onMethodChange }: PaymentMethodTabProps) {
+function PaymentMethodTab({ onNext, onPrev, selectedMethod, onMethodChange, isPending }: PaymentMethodTabProps) {
   const paymentMethods = [
     {
       id: 'bank_transfer',
@@ -62,11 +63,11 @@ function PaymentMethodTab({ onNext, onPrev, selectedMethod, onMethodChange }: Pa
       </div>
 
       <div className='mt-4 flex items-center justify-between'>
-        <Button className='' onClick={onPrev}>
+        <Button className='' onClick={onPrev} disabled={isPending}>
           Back
         </Button>
-        <Button className='' onClick={onNext}>
-          Place Order
+        <Button className='' onClick={onNext} disabled={isPending}>
+          {isPending ? 'Processing...' : 'Place Order'}
         </Button>
       </div>
     </div>
