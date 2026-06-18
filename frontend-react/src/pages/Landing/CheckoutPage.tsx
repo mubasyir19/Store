@@ -26,6 +26,8 @@ interface ShippingData {
   shippingCity: string;
   shippingPostalCode: string;
   shippingNotes: string;
+  shippingMethod: string;
+  shippingPrice: number;
 }
 
 function CheckoutPage() {
@@ -50,6 +52,8 @@ function CheckoutPage() {
     shippingCity: '',
     shippingPostalCode: '',
     shippingNotes: '',
+    shippingMethod: 'regular',
+    shippingPrice: 10000,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -57,12 +61,20 @@ function CheckoutPage() {
     setFormShippingData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleShippingMethodChange = (method: string, price: number) => {
+    setFormShippingData((prev) => ({
+      ...prev,
+      shippingMethod: method,
+      shippingPrice: price,
+    }));
+  };
+
   // Count Total Cart
-  const shipping = 0;
   const estimatedTax = subtotal * 0.11;
-  const total = subtotal + shipping + estimatedTax;
+  const total = subtotal + formShippingData.shippingPrice + estimatedTax;
 
   console.log('item cart = ', cartItems);
+  console.log('form shipping data = ', formShippingData);
 
   return (
     <div>
@@ -117,9 +129,14 @@ function CheckoutPage() {
               {currentStep === 0 && (
                 <ShippingDataTab data={formShippingData} onChange={handleChange} onNext={nextStep} />
               )}
-              {currentStep === 1 && <ShippingMethodTab onNext={nextStep} onPrev={prevStep} />}
-              {currentStep === 2 && (
-                <ShippingDataTab data={formShippingData} onChange={handleChange} onNext={nextStep} onPrev={prevStep} />
+              {currentStep === 1 && (
+                <ShippingMethodTab
+                  onNext={nextStep}
+                  onPrev={prevStep}
+                  selectedMethod={formShippingData.shippingMethod}
+                  selectedPrice={formShippingData.shippingPrice}
+                  onMethodChange={handleShippingMethodChange}
+                />
               )}
             </div>
           </div>
@@ -144,7 +161,9 @@ function CheckoutPage() {
               </div>
               <div className='flex items-center justify-between'>
                 <p className='text-sm text-black'>Shipping</p>
-                <p className='text-sm'>{shipping.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}</p>
+                <p className='text-sm'>
+                  {formShippingData.shippingPrice.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}
+                </p>
               </div>
               <div className='flex items-center justify-between'>
                 <p className='text-sm text-black'>Estimated Tax</p>
