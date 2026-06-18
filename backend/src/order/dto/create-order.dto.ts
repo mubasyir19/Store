@@ -37,6 +37,10 @@ export class CreateOrderDto {
   @IsString()
   shippingCourier?: string;
 
+  @IsString()
+  @IsIn(['bank_transfer', 'credit_card', 'gopay', 'qris'])
+  paymentMethod: string;
+
   @IsOptional()
   @IsString()
   shippingService?: string;

@@ -157,6 +157,9 @@ export class OrderService {
           shippingCost: shippingCost,
           shippingEta: shippingEta,
 
+          paymentType: checkoutData.paymentMethod,
+          paymentStatus: 'pending',
+
           paymentExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
           orderItem: { create: orderItemsData },
         },
