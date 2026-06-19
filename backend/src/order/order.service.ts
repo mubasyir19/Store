@@ -10,13 +10,17 @@ import { MidtransService } from './midtrans.service';
 
 type MidtransNotification = {
   order_id: string;
-  transaction_status: string;
+  transaction_status?: string;
+  status_code?: string | number;
   fraud_status?: string;
   payment_type?: string;
   transaction_id?: string;
   transaction_time?: string;
   settlement_time?: string;
   va_numbers?: Array<{ va_number: string }>;
+  bca_va_number?: string;
+  permata_va_number?: string;
+  bill_key?: string;
   [key: string]: unknown;
 };
 
@@ -238,16 +242,31 @@ export class OrderService {
     };
   }
 
-  async handlePaymentNotification(notification: MidtransNotification) {
-    const statusResponse =
-      await this.midtransService.handleNotification(notification);
+  private normalizeMidtransNotification(notification: MidtransNotification) {
+    const transactionStatusRaw =
+      notification.transaction_status ||
+      (notification.status_code !== undefined
+        ? String(notification.status_code)
+        : '') ||
+      '';
+    const transactionStatus = transactionStatusRaw.toLowerCase();
+    const paymentType = notification.payment_type?.toLowerCase() || undefined;
+    return { transactionStatus, paymentType };
+  }
 
-    const midtransNotif = statusResponse as MidtransNotification;
+  private async processMidtransPayload(midtransNotif: MidtransNotification) {
     const orderId = midtransNotif.order_id;
-    const transactionStatus = midtransNotif.transaction_status;
     const fraudStatus = midtransNotif.fraud_status;
+    const { transactionStatus, paymentType } =
+      this.normalizeMidtransNotification(midtransNotif);
 
-    // Find order by midtransOrderId
+    console.log('Midtrans payload processing:', {
+      orderId,
+      transactionStatus,
+      paymentType,
+      fraudStatus,
+    });
+
     const order = await this.prisma.order.findFirst({
       where: { midtransOrderId: orderId },
     });
@@ -263,55 +282,69 @@ export class OrderService {
       | 'Shipped'
       | 'Delivered'
       | 'Cancelled' = order.status;
-    let paymentStatus = midtransNotif.transaction_status;
+    let paymentStatus: string = 'pending';
 
-    // Determine order status based on payment status
-    if (transactionStatus === 'capture') {
-      // capture is for credit card transaction
-      if (fraudStatus === 'accept') {
-        orderStatus = 'Paid';
-      }
-    } else if (transactionStatus === 'settlement') {
-      orderStatus = 'Paid';
-    } else if (transactionStatus === 'pending') {
-      orderStatus = 'Pending';
-      paymentStatus = 'pending';
-    } else if (
-      transactionStatus === 'deny' ||
-      transactionStatus === 'cancel' ||
-      transactionStatus === 'expire'
-    ) {
-      orderStatus = 'Cancelled';
-      paymentStatus = 'failed';
-
-      // Restore stock if payment failed
-      if (orderStatus === 'Cancelled') {
-        const orderItems = await this.prisma.orderItem.findMany({
-          where: { orderId: order.id },
-        });
-
-        for (const item of orderItems) {
-          await this.prisma.product.update({
-            where: { id: item.productId },
-            data: {
-              stock: {
-                increment: item.quantity,
-              },
-            },
-          });
+    switch (transactionStatus) {
+      case 'capture':
+        if (paymentType === 'credit_card') {
+          if (fraudStatus === 'accept') {
+            orderStatus = 'Paid';
+            paymentStatus = 'capture';
+          }
+        } else {
+          orderStatus = 'Paid';
+          paymentStatus = 'capture';
         }
+        break;
+      case 'settlement':
+        orderStatus = 'Paid';
+        paymentStatus = 'settlement';
+        break;
+      case 'pending':
+        orderStatus = 'Pending';
+        paymentStatus = 'pending';
+        break;
+      case 'deny':
+      case 'cancel':
+      case 'expire':
+        orderStatus = 'Cancelled';
+        paymentStatus = 'failed';
+        break;
+      default:
+        paymentStatus = transactionStatus || order.paymentStatus || 'pending';
+        break;
+    }
+
+    if (orderStatus === 'Cancelled') {
+      const orderItems = await this.prisma.orderItem.findMany({
+        where: { orderId: order.id },
+      });
+
+      for (const item of orderItems) {
+        await this.prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: { increment: item.quantity },
+          },
+        });
       }
     }
 
-    // Update order with payment info
+    const extractedVaNumber: string | null =
+      midtransNotif.va_numbers?.[0]?.va_number ??
+      midtransNotif.bca_va_number ??
+      midtransNotif.permata_va_number ??
+      midtransNotif.bill_key ??
+      null;
+
     await this.prisma.order.update({
       where: { id: order.id },
       data: {
         status: orderStatus,
         paymentStatus: paymentStatus,
-        paymentType: midtransNotif.payment_type,
+        paymentType: paymentType || midtransNotif.payment_type,
         fraudStatus: midtransNotif.fraud_status,
-        vaNumber: midtransNotif.va_numbers?.[0]?.va_number,
+        vaNumber: extractedVaNumber,
         transactionId: midtransNotif.transaction_id,
         transactionTime: midtransNotif.transaction_time
           ? new Date(midtransNotif.transaction_time)
@@ -324,6 +357,13 @@ export class OrderService {
     });
 
     return { success: true };
+  }
+
+  async handlePaymentNotification(notification: MidtransNotification) {
+    const statusResponse =
+      await this.midtransService.handleNotification(notification);
+
+    return this.processMidtransPayload(statusResponse as MidtransNotification);
   }
 
   async getOrderStatus(orderId: string, userId: string) {
@@ -360,10 +400,12 @@ export class OrderService {
           );
 
         const status = statusResponse as MidtransNotification;
+        const { transactionStatus } =
+          this.normalizeMidtransNotification(status);
 
         // Update status if changed
-        if (status.transaction_status !== order.paymentStatus) {
-          await this.handlePaymentNotification(status);
+        if (transactionStatus !== order.paymentStatus) {
+          await this.processMidtransPayload(status);
         }
 
         // Refresh order data
@@ -419,16 +461,29 @@ export class OrderService {
     };
   }
 
-  async getOrderDetail(orderId: string) {
+  async getOrderDetail(orderId: string, userId: string) {
     const dataOrder = await this.prisma.order.findFirst({
       where: {
         id: orderId,
+        userId,
+      },
+      include: {
+        orderItem: {
+          include: {
+            product: {
+              select: {
+                name: true,
+                images: true,
+                slug: true,
+              },
+            },
+          },
+        },
       },
     });
 
     if (!dataOrder) {
       throw new NotFoundException('Order not found');
-      return;
     }
 
     return {

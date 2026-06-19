@@ -25,18 +25,18 @@ export class OrderController {
     return this.orderService.checkout(req.user.sub, createOrderDto);
   }
 
-  @Get()
-  getOrderStatus(@Req() req: RequestWithUser, @Param('id') orderId: string) {
-    return this.orderService.getOrderStatus(orderId, req.user.sub);
-  }
-
   @Get('all')
   getListOrder(@Req() req: RequestWithUser) {
     return this.orderService.getListOrder(req.user.sub);
   }
 
+  @Get('status/:id')
+  getOrderStatus(@Req() req: RequestWithUser, @Param('id') orderId: string) {
+    return this.orderService.getOrderStatus(orderId, req.user.sub);
+  }
+
   @Get(':id')
-  async getOrder(@Param('id') id: string) {
-    return this.orderService.getOrderDetail(id);
+  async getOrder(@Req() req: RequestWithUser, @Param('id') id: string) {
+    return this.orderService.getOrderDetail(id, req.user.sub);
   }
 }
