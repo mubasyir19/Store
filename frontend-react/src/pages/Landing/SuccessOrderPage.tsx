@@ -59,7 +59,7 @@ function SuccessOrderPage() {
         {/* Tombol Navigasi */}
         <div className='space-y-3'>
           <Link
-            to='/dashboard/orders'
+            to='/order'
             className='block w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition duration-200'
           >
             Lihat Daftar Pesanan
