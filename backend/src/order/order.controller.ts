@@ -30,6 +30,11 @@ export class OrderController {
     return this.orderService.getOrderStatus(orderId, req.user.sub);
   }
 
+  @Get('all')
+  getListOrder(@Req() req: RequestWithUser) {
+    return this.orderService.getListOrder(req.user.sub);
+  }
+
   @Get(':id')
   async getOrder(@Param('id') id: string) {
     return this.orderService.getOrderDetail(id);

@@ -392,6 +392,30 @@ export class OrderService {
     return order;
   }
 
+  async getListOrder(userId: string) {
+    const listOrder = await this.prisma.order.findMany({
+      where: {
+        userId: userId,
+      },
+    });
+
+    if (!listOrder) {
+      throw new NotFoundException('List order not found');
+    }
+
+    if (listOrder.length === 0) {
+      return {
+        message: 'Empty order',
+        data: listOrder,
+      };
+    }
+
+    return {
+      message: 'Successfully get list order',
+      data: listOrder,
+    };
+  }
+
   async getOrderDetail(orderId: string) {
     const dataOrder = await this.prisma.order.findFirst({
       where: {
