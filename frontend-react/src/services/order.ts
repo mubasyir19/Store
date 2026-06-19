@@ -6,6 +6,11 @@ export const checkoutOrder = async (data: CheckoutData) => {
   return res.data;
 };
 
+export const getListOrder = async () => {
+  const res = await api.get(`/order/all`);
+  return res.data;
+};
+
 export const getOrderDetail = async (orderId: string) => {
   const res = await api.get(`/order/${orderId}`);
   return res.data;

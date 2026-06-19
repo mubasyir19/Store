@@ -397,6 +397,9 @@ export class OrderService {
       where: {
         userId: userId,
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     if (!listOrder) {

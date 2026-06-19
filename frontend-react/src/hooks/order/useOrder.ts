@@ -1,5 +1,5 @@
 import { useMutation, useQuery, type UseMutationOptions } from '@tanstack/react-query';
-import { checkoutOrder, getOrderDetail } from '../../services/order';
+import { checkoutOrder, getListOrder, getOrderDetail } from '../../services/order';
 import type { CheckoutData, CheckoutResponse } from '../../types/order';
 import { toast } from 'sonner';
 
@@ -110,6 +110,13 @@ export const useCheckout = (options?: UseMutationOptions<CheckoutResponse, Error
       }
     },
     ...options,
+  });
+};
+
+export const useOrderList = () => {
+  return useQuery({
+    queryKey: ['listOrder'],
+    queryFn: () => getListOrder(),
   });
 };
 

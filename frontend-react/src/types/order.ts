@@ -17,7 +17,7 @@ export interface Order {
   id: string;
   userId: string;
   status: OrderStatus;
-  totalPrice: number;
+  totalPrice: string; // <-- Diubah ke string sesuai response json backend
   createdAt: string;
   updatedAt: string;
   shippingName: string;
@@ -25,23 +25,29 @@ export interface Order {
   shippingAddress: string;
   shippingCity: string;
   shippingPostalCode: string;
-  shippingNotes?: string;
+  shippingNotes: string | null;
 
-  shippingMethod: string; // 'regular' | 'express' | 'same_day'
-  shippingCost: number; // Biaya pengiriman
-  shippingEta?: string; // Estimasi waktu sampai
-  shippingCourier?: string; // Kurir (jne, tiki, pos)
-  shippingService?: string; // Layanan (reg, yes, oke)
+  shippingMethod: string;
+  shippingCost: string; // <-- Diubah ke string sesuai response json backend
+  shippingEta: string | null;
+  shippingCourier: string | null;
+  shippingService: string | null;
 
-  trackingNumber?: string;
-  trackingUrl?: string;
+  trackingNumber: string | null;
+  trackingUrl: string | null;
 
-  snapToken?: string;
-  snapRedirectUrl?: string;
-  paymentType?: string; // 'bank_transfer' | 'credit_card' | 'gopay'
-  paymentStatus?: string; // 'pending' | 'settlement' | 'capture' | 'expire'
-  transactionId?: string;
-  vaNumber?: string;
+  midtransOrderId: string;
+  snapToken: string | null;
+  snapRedirectUrl: string | null;
+  paymentType: string | null;
+  paymentStatus: string | null;
+  fraudStatus: string | null;
+  vaNumber: string | null;
+  transactionId: string | null;
+  transactionTime: string | null;
+  settlementTime: string | null;
+  paymentExpiry: string | null;
+  paymentRawResponse: any | null;
 }
 
 export interface PaymentResponse {

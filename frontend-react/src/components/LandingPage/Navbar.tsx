@@ -76,6 +76,9 @@ function Navbar() {
                   <DropdownMenuItem>
                     <Link to={`#`}>Profile</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link to={`/order`}>Order History</Link>
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <Button onClick={handleLogout} size={'sm'} className='bg-red-500 w-full text-white rounded-lg'>
                   {pendingLogout ? 'Loading...' : 'Logout'}
