@@ -35,8 +35,8 @@ function Navbar() {
         </Link>
       </div>
       <div className='hidden md:flex items-center gap-4'>
-        <Link to={`/category`}>
-          <p className={`font-medium ${pathname === '/category' ? 'text-primary' : 'text-black'}`}>Category</p>
+        <Link to={`/`}>
+          <p className={`font-medium ${pathname === '/category' ? 'text-primary' : 'text-black'}`}>Home</p>
         </Link>
         <Link to={`/product`}>
           <p className={`font-medium ${pathname === '/product' ? 'text-primary' : 'text-black'}`}>Product</p>
