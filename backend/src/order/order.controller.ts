@@ -22,11 +22,11 @@ export class OrderController {
     @Req() req: RequestWithUser,
     @Body() createOrderDto: CreateOrderDto,
   ) {
-    return this.orderService.checkout(req.user.id, createOrderDto);
+    return this.orderService.checkout(req.user.sub, createOrderDto);
   }
 
   @Get()
   getOrderStatus(@Req() req: RequestWithUser, @Param('id') orderId: string) {
-    return this.orderService.getOrderStatus(orderId, req.user.id);
+    return this.orderService.getOrderStatus(orderId, req.user.sub);
   }
 }

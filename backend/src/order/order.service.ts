@@ -28,7 +28,9 @@ export class OrderService {
   ) {}
 
   async checkout(userId: string, checkoutData: CreateOrderDto) {
-    const user = await this.prisma.user.findUnique({
+    console.log('id user = ', userId);
+    // const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findFirst({
       where: {
         id: userId,
       },

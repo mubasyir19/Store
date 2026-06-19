@@ -51,6 +51,28 @@ export class MidtransService {
     });
   }
 
+  private formatMidtransDate(date: Date): string {
+    // Format: YYYY-MM-DD HH:mm:ss +timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    // Dapatkan timezone offset dalam format +0700
+    const offset = -date.getTimezoneOffset();
+    const offsetSign = offset >= 0 ? '+' : '-';
+    const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(
+      2,
+      '0',
+    );
+    const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, '0');
+    const timezone = `${offsetSign}${offsetHours}${offsetMinutes}`;
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${timezone}`;
+  }
+
   async createTransaction(
     orderId: string,
     totalAmount: number,
@@ -66,6 +88,9 @@ export class MidtransService {
       quantity: number;
     }>,
   ) {
+    const now = new Date();
+    const startTime = this.formatMidtransDate(now);
+
     const parameter = {
       transaction_details: {
         order_id: orderId,
@@ -84,7 +109,8 @@ export class MidtransService {
       })),
       // Optional: Set expiry (default 24 jam)
       expiry: {
-        start_time: new Date().toISOString(),
+        // start_time: new Date().toISOString(),
+        start_time: startTime,
         duration: 24,
         unit: 'hours',
       },
