@@ -391,4 +391,22 @@ export class OrderService {
 
     return order;
   }
+
+  async getOrderDetail(orderId: string) {
+    const dataOrder = await this.prisma.order.findFirst({
+      where: {
+        id: orderId,
+      },
+    });
+
+    if (!dataOrder) {
+      throw new NotFoundException('Order not found');
+      return;
+    }
+
+    return {
+      message: 'Successfully get detail order',
+      order: dataOrder,
+    };
+  }
 }

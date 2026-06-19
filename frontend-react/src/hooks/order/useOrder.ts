@@ -1,5 +1,5 @@
-import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
-import { checkoutOrder } from '../../services/order';
+import { useMutation, useQuery, type UseMutationOptions } from '@tanstack/react-query';
+import { checkoutOrder, getOrderDetail } from '../../services/order';
 import type { CheckoutData, CheckoutResponse } from '../../types/order';
 import { toast } from 'sonner';
 
@@ -66,25 +66,25 @@ export const useCheckout = (options?: UseMutationOptions<CheckoutResponse, Error
         onSuccess: (result: any) => {
           console.log('✅ Payment success:', result);
           // 🔥 PERBAIKAN: Redirect ke orders/success dengan order_id
-          window.location.href = `/orders/success?order_id=${data.order?.id || ''}`;
+          window.location.href = `/order/success?order_id=${data.order?.id || ''}`;
         },
         onPending: (result: any) => {
           console.log('⏳ Payment pending:', result);
           // 🔥 PERBAIKAN: Redirect ke orders/pending
-          window.location.href = `/orders/pending?order_id=${data.order?.id || ''}`;
+          window.location.href = `/order/pending?order_id=${data.order?.id || ''}`;
         },
         onError: (result: any) => {
           console.error('❌ Payment error:', result);
           // 🔥 PERBAIKAN: Redirect ke orders/failed
-          window.location.href = `/orders/failed?order_id=${data.order?.id || ''}`;
+          window.location.href = `/order/failed?order_id=${data.order?.id || ''}`;
         },
         onClose: () => {
           console.log('🚫 Customer closed payment popup');
           // 🔥 TAMBAHAN: Redirect ke halaman order detail
           if (data.order?.id) {
-            window.location.href = `/orders/${data.order.id}`;
+            window.location.href = `/order/${data.order.id}`;
           } else {
-            window.location.href = '/orders';
+            window.location.href = '/order';
           }
         },
       });
@@ -110,5 +110,13 @@ export const useCheckout = (options?: UseMutationOptions<CheckoutResponse, Error
       }
     },
     ...options,
+  });
+};
+
+export const useOrderDetail = (orderId: string) => {
+  return useQuery({
+    queryKey: ['orderDetail', orderId],
+    queryFn: () => getOrderDetail(orderId),
+    enabled: !!orderId,
   });
 };
