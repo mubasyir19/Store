@@ -36,7 +36,7 @@ const ListMenu = [
 
 function Sidebar() {
   return (
-    <aside className='w-64 h-screen bg-secondary border-r border-gray-300 p-4'>
+    <aside className='hidden md:block fixed w-64 h-screen bg-secondary border-r border-gray-300 p-4'>
       <div className='px-4'>
         <h3 className='text-primary font-bold text-lg'>Emerald Retail</h3>
         <p className='text-neutral text-sm'>Management</p>
