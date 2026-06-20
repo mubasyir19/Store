@@ -1,3 +1,5 @@
+import type { User } from './user';
+
 // types/order.ts
 export interface CheckoutData {
   shippingName: string;
@@ -48,6 +50,8 @@ export interface Order {
   settlementTime: string | null;
   paymentExpiry: string | null;
   paymentRawResponse: any | null;
+
+  user: User;
 }
 
 export interface PaymentResponse {

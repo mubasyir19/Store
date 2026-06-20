@@ -1,7 +1,7 @@
 import { useMutation, useQuery, type UseMutationOptions } from '@tanstack/react-query';
-import { checkoutOrder, getListOrder, getOrderDetail } from '../../services/order';
-import type { CheckoutData, CheckoutResponse } from '../../types/order';
 import { toast } from 'sonner';
+import { checkoutOrder, getAllOrder, getListOrderUser, getOrderDetail } from '../../services/order';
+import type { CheckoutData, CheckoutResponse } from '../../types/order';
 
 declare global {
   interface Window {
@@ -113,10 +113,17 @@ export const useCheckout = (options?: UseMutationOptions<CheckoutResponse, Error
   });
 };
 
+export const useOrderAll = () => {
+  return useQuery({
+    queryKey: ['allOrder'],
+    queryFn: () => getAllOrder(),
+  });
+};
+
 export const useOrderList = () => {
   return useQuery({
     queryKey: ['listOrder'],
-    queryFn: () => getListOrder(),
+    queryFn: () => getListOrderUser(),
   });
 };
 

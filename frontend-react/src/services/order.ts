@@ -6,8 +6,13 @@ export const checkoutOrder = async (data: CheckoutData) => {
   return res.data;
 };
 
-export const getListOrder = async () => {
+export const getAllOrder = async () => {
   const res = await api.get(`/order/all`);
+  return res.data;
+};
+
+export const getListOrderUser = async () => {
+  const res = await api.get(`/order/user/all`);
   return res.data;
 };
 
